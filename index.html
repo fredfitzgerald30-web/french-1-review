@@ -1,0 +1,437 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"><style>html{color-scheme:light}body{margin:0}img{max-width:100%}:root{padding-top:env(safe-area-inset-top);padding-bottom:env(safe-area-inset-bottom)}</style><title>French Review Lab</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<style>
+/* Layout: one column. Header with a running score; six tabs; each drill is one card at a time with typed answers or 4 choices */
+:root{
+  --bg:#EEF1F6; --surface:#FFFFFF; --sunk:#F5F7FA; --ink:#141A26; --muted:#5D6678; --line:#DCE1EA;
+  --accent:#1F4FA3; --accent-soft:#E3EBF8; --accent-ink:#FFFFFF; --red:#C8102E;
+  --good:#1E7A3C; --good-soft:#E0F2E6; --bad:#B42318; --bad-soft:#FBE4E1; --warn:#9A6700; --warn-soft:#F7EDD3;
+  --body:-apple-system,BlinkMacSystemFont,"SF Pro Text","Helvetica Neue","Segoe UI",Roboto,sans-serif;
+  --display:-apple-system,BlinkMacSystemFont,"SF Pro Display","Helvetica Neue","Segoe UI",Roboto,sans-serif;
+  --mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0F131A; --surface:#181D27; --sunk:#131821; --ink:#E8ECF3; --muted:#9AA3B5; --line:#2A3140;
+  --accent:#8DB2F2; --accent-soft:#1D2A44; --accent-ink:#0B1426; --red:#FF7B8A;
+  --good:#5FC27D; --good-soft:#15301F; --bad:#F2776C; --bad-soft:#3D1C1A; --warn:#E3B54B; --warn-soft:#3A2F14; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0F131A; --surface:#181D27; --sunk:#131821; --ink:#E8ECF3; --muted:#9AA3B5; --line:#2A3140;
+  --accent:#8DB2F2; --accent-soft:#1D2A44; --accent-ink:#0B1426; --red:#FF7B8A;
+  --good:#5FC27D; --good-soft:#15301F; --bad:#F2776C; --bad-soft:#3D1C1A; --warn:#E3B54B; --warn-soft:#3A2F14; color-scheme:dark}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:17px;line-height:1.5}
+.wrap{max-width:760px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+header.top{padding-block:28px 18px}
+.head{display:flex;flex-wrap:wrap;gap:12px;align-items:flex-end;justify-content:space-between}
+.eyebrow{margin:0;font-family:var(--mono);font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.flag{display:inline-flex;height:10px;width:15px;border-radius:2px;overflow:hidden;vertical-align:-1px;margin-right:6px}
+.flag i{flex:1}.flag i:nth-child(1){background:#1F4FA3}.flag i:nth-child(2){background:#fff;box-shadow:inset 0 0 0 .5px var(--line)}.flag i:nth-child(3){background:#C8102E}
+h1{margin:2px 0 0;font-family:var(--display);font-weight:800;letter-spacing:-.025em;font-size:clamp(30px,6vw,40px);line-height:1.05}
+.tally{font-family:var(--mono);font-size:13px;color:var(--muted);text-align:right}
+.tally b{display:block;font-size:26px;color:var(--ink);font-weight:600;font-variant-numeric:tabular-nums}
+.tally button{border:0;background:none;color:var(--muted);font:12px var(--mono);text-decoration:underline;cursor:pointer;padding:0}
+nav.tabs{display:flex;gap:4px;padding:4px;background:var(--sunk);border:1px solid var(--line);border-radius:12px;overflow-x:auto}
+nav.tabs button{flex:1 0 auto;border:0;background:transparent;color:var(--muted);font:600 15px var(--body);padding:10px 14px;border-radius:9px;cursor:pointer;white-space:nowrap}
+nav.tabs button[aria-selected="true"]{background:var(--surface);color:var(--ink);box-shadow:0 1px 2px rgba(0,0,0,.12)}
+main{padding-block:16px 48px}
+.bar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between;margin-bottom:12px}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{border:1.5px solid var(--line);background:var(--surface);color:var(--ink);font:600 14px var(--body);padding:6px 12px;border-radius:999px;cursor:pointer}
+.chip[aria-pressed="true"]{border-color:var(--accent);background:var(--accent-soft)}
+.subchips{margin-bottom:10px}
+.subchips .chip{font-size:13px;padding:4px 10px}
+.count{font-family:var(--mono);font-size:13px;color:var(--muted);font-variant-numeric:tabular-nums}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:22px clamp(16px,4vw,28px);display:grid;gap:14px;min-width:0}
+.label{font-family:var(--mono);font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--accent);margin:0}
+.label .again{color:var(--warn)}
+.q{font-size:clamp(19px,3.6vw,23px);font-weight:600;line-height:1.35;margin:0}
+.q .fr{font-weight:700;color:var(--accent)}
+.q .hint{display:block;font-size:15px;font-weight:500;color:var(--muted);margin-top:4px}
+.blank{display:inline-block;min-width:3.2em;border-bottom:2.5px solid var(--accent);text-align:center;color:var(--accent)}
+.tip{font-size:14px;color:var(--muted);margin:0}
+.choices{display:grid;gap:8px}
+.choice{display:flex;gap:12px;align-items:center;text-align:left;border:1.5px solid var(--line);background:var(--sunk);color:var(--ink);font:500 17px var(--body);padding:12px 14px;border-radius:10px;cursor:pointer}
+.choice:hover:not([disabled]){border-color:var(--accent)}
+.choice .k{font-family:var(--mono);font-size:12px;color:var(--muted);border:1px solid var(--line);border-radius:5px;padding:1px 6px;flex:none}
+.choice.right{border-color:var(--good);background:var(--good-soft)} .choice.wrong{border-color:var(--bad);background:var(--bad-soft)}
+.choice[disabled]{cursor:default}
+input[type=text]{width:100%;font:500 19px var(--body);color:var(--ink);background:var(--sunk);border:1.5px solid var(--line);border-radius:10px;padding:11px 13px}
+input:focus{outline:none;border-color:var(--accent)}
+.accents{display:flex;flex-wrap:wrap;gap:5px}
+.accents button{min-width:36px;height:34px;border:1px solid var(--line);background:var(--surface);color:var(--ink);font:600 16px var(--body);border-radius:7px;cursor:pointer}
+.row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.btn{border:1.5px solid var(--line);background:var(--surface);color:var(--ink);font:600 15px var(--body);padding:9px 16px;border-radius:10px;cursor:pointer}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.btn.ghost{border-color:transparent;color:var(--muted);padding-inline:8px}
+button:focus-visible{outline:2.5px solid var(--accent);outline-offset:2px}
+.kbd{font-family:var(--mono);font-size:12px;color:var(--muted)}
+.fb{border-radius:10px;padding:12px 14px;display:grid;gap:4px}
+.fb p{margin:0}
+.fb.ok{background:var(--good-soft)} .fb.no{background:var(--bad-soft)} .fb.mid{background:var(--warn-soft)}
+.fb strong{font-size:15px} .fb.ok strong{color:var(--good)} .fb.no strong{color:var(--bad)} .fb.mid strong{color:var(--warn)}
+.fb .ans{font-size:18px;font-weight:700}
+.fb .why{font-size:15px;color:var(--muted)}
+/* rules */
+.rules{display:grid;gap:14px}
+.rules h2{margin:0;font:700 19px var(--display);letter-spacing:-.01em}
+.rules p{margin:0}
+.rules table{border-collapse:collapse;width:100%;font-size:15px}
+.rules td,.rules th{border-bottom:1px solid var(--line);padding:6px 8px;text-align:left;vertical-align:top}
+.rules th{font-family:var(--mono);font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);font-weight:500}
+.tw{overflow-x:auto}
+.fix{background:var(--warn-soft);border-radius:10px;padding:12px 14px;font-size:15px}
+.fix b{color:var(--warn)}
+.fix ul{margin:6px 0 0;padding-left:20px}
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:4px 18px;font-size:15px}
+@media (max-width:560px){.tally{text-align:left;width:100%}}
+@media (prefers-reduced-motion:no-preference){.fb{animation:pop .18s ease-out}@keyframes pop{from{transform:translateY(3px);opacity:.4}to{transform:none;opacity:1}}}
+</style></head><body>
+
+<header class="top">
+  <div class="wrap head">
+    <div>
+      <p class="eyebrow"><span class="flag"><i></i><i></i><i></i></span>French 2 · Review</p>
+      <h1>French Review Lab</h1>
+    </div>
+    <div class="tally"><b id="tally">0 / 0</b>right this session · <button id="reset">reset</button></div>
+  </div>
+</header>
+
+<div class="wrap">
+  <nav class="tabs" role="tablist" aria-label="Drills">
+    <button role="tab" id="tab-mc" data-tab="mc" aria-selected="true">Multiple choice</button>
+    <button role="tab" id="tab-vocab" data-tab="vocab" aria-selected="false">Vocab</button>
+    <button role="tab" id="tab-conj" data-tab="conj" aria-selected="false">Conjugate</button>
+    <button role="tab" id="tab-adj" data-tab="adj" aria-selected="false">Adjectives</button>
+    <button role="tab" id="tab-prep" data-tab="prep" aria-selected="false">Prépositions</button>
+    <button role="tab" id="tab-rules" data-tab="rules" aria-selected="false">Rules</button>
+  </nav>
+</div>
+
+<main class="wrap">
+  <section id="pane-mc" role="tabpanel" aria-labelledby="tab-mc"><div class="bar"><div class="chips" id="mc-chips"></div><span class="count" id="mc-count"></span></div><div id="mc-card"></div></section>
+  <section id="pane-vocab" role="tabpanel" aria-labelledby="tab-vocab" hidden><div class="bar"><div class="chips" id="vocab-chips"></div><span class="count" id="vocab-count"></span></div><div class="chips subchips" id="vocab-dir"></div><div id="vocab-card"></div></section>
+  <section id="pane-conj" role="tabpanel" aria-labelledby="tab-conj" hidden><div class="bar"><div class="chips" id="conj-chips"></div><span class="count" id="conj-count"></span></div><div id="conj-card"></div></section>
+  <section id="pane-adj" role="tabpanel" aria-labelledby="tab-adj" hidden><div class="bar"><div class="chips" id="adj-chips"></div><span class="count" id="adj-count"></span></div><div id="adj-card"></div></section>
+  <section id="pane-prep" role="tabpanel" aria-labelledby="tab-prep" hidden><div class="bar"><div class="chips" id="prep-chips"></div><span class="count" id="prep-count"></span></div><div id="prep-card"></div></section>
+  <section id="pane-rules" role="tabpanel" aria-labelledby="tab-rules" hidden><div class="rules" id="rules"></div></section>
+</main>
+
+<script>
+const $=s=>document.querySelector(s);
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const shuffle=a=>{a=[...a];for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;};
+const pick=a=>a[Math.floor(Math.random()*a.length)];
+const uniq=a=>[...new Set(a)];
+const store={get(k,d){try{const v=localStorage.getItem('fr2:'+k);return v==null?d:JSON.parse(v);}catch(e){return d;}},set(k,v){try{localStorage.setItem('fr2:'+k,JSON.stringify(v));}catch(e){}}};
+
+/* ================= DATA (fixed where the notes were off) ================= */
+// [French, English, de?]
+const PREP=[['loin de','far from',1],['près de','near / close to',1],['en face de','across from / facing',1],['devant','in front of',0],['derrière','behind',0],['à gauche de','to the left of',1],['à droite de','to the right of',1],['entre','between',0],['à côté de','next to',1],['au-dessus de','above',1],['sous','under',0],['dans','in / inside',0],['sur','on',0],['autour de','around',1]];
+const AVOIR=[["avoir ___ ans","to be ___ years old"],["avoir besoin de","to need"],["avoir envie de","to want / to feel like"],["avoir l'intention de","to intend to"],["avoir faim","to be hungry"],["avoir soif","to be thirsty"],["avoir chaud","to be hot"],["avoir froid","to be cold"],["avoir honte de","to be ashamed of"],["avoir mal à","to hurt / to have pain in"],["avoir raison","to be right"],["avoir tort","to be wrong"],["avoir sommeil","to be sleepy"],["avoir hâte de","to be eager to / can't wait to"],["avoir peur de","to be afraid of"],["avoir le cafard","to feel down / to be depressed"],["avoir de la chance","to be lucky"]];
+// [French, English, hint for English→French]
+const QW=[["qu'est-ce que","what","before a subject + verb: ___ tu fais ?"],["qui","who"],["quel / quelle","which / what","before a noun: ___ couleur ?"],["avec qui","with whom / with who"],["où","where"],["quand","when"],["pourquoi","why"],["comment","how"],["combien de","how many / how much"],["à quelle heure","at what time"],["d'où","from where"],["peut-être","maybe"],["je ne sais pas","I don't know"]];
+const HOUSE=[["une armoire","wardrobe / freestanding closet"],["un balcon","balcony"],["un bureau","desk"],["une chambre","bedroom"],["une commode","dresser"],["la cuisine","kitchen"],["les étagères","shelves"],["le jardin","garden / yard"],["une lampe","lamp"],["un lit","bed"],["la maison","house"],["une pièce","room"],["un poster","poster"],["la salle à manger","dining room"],["la salle de bains","bathroom (bath / shower)"],["le salon","living room"],["un tapis","rug"],["les toilettes / les W.-C.","toilet / restroom"],["un rideau","curtain"],["un traversin","bolster / long pillow across the bed"],["l'escalier","stairs / staircase"],["un canapé","couch / sofa"],["un placard","closet / cupboard (built-in)"],["la minuterie","timed light switch / light timer"]];
+const VERBS=[["jouer","to play"],["danser","to dance"],["chanter","to sing"],["parler","to speak / to talk"],["manger","to eat"],["étudier","to study"],["écouter","to listen to"],["voyager","to travel"],["acheter","to buy"],["nager","to swim"],["cuisiner","to cook"],["parler au téléphone","to talk on the phone"],["regarder la télé","to watch TV"],["travailler","to work"],["payer","to pay"],["faire du shopping","to go shopping"],["faire les magasins","to go to the stores","store to store"],["faire de l'équitation","to go horseback riding / to ride horses"],["faire du vélo","to ride a bike / to go biking"],["faire du ski","to ski / to go skiing"],["lire","to read"],["sortir","to go out"],["dormir","to sleep"],["écrire","to write"],["prendre","to take / to have (food or drink)"],["comprendre","to understand"],["apprendre","to learn"],["surprendre","to surprise"],["aller","to go"],["être","to be"],["avoir","to have"]];
+const GER=[["rédiger","to draft / to write"],["partager","to share"],["ranger","to put away"],["plonger","to dive"],["télécharger","to download"],["aménager","to fix up / to convert"],["décourager","to discourage"],["déménager","to move (house)"],["déranger","to bother"],["encourager","to encourage"],["arranger","to arrange"],["corriger","to correct"],["changer","to change"]];
+const YER=[["employer","to use"],["rayer","to cross out"],["appuyer","to press (a button) / to support"],["balayer","to sweep"],["essuyer","to wipe"],["ennuyer","to bore"],["envoyer","to send"],["tutoyer","to use the tu form"],["aboyer","to bark"],["renvoyer","to send back / to fire"],["nettoyer","to clean"],["effrayer","to frighten"],["vouvoyer","to use the vous form"]];
+const CER=[["avancer","to advance / to move forward"],["prononcer","to pronounce"],["renoncer","to give up / to quit"],["placer","to place / to invest"],["annoncer","to announce"],["divorcer","to divorce"],["effacer","to erase"],["relancer","to restart"],["lancer","to throw / to launch"],["remplacer","to replace"],["commencer","to begin / to start"],["agacer","to annoy"]];
+
+// adjectives: [m, f, mpl, fpl, special form (bel/nouvel/vieil), BANGS letter, English, people-only]
+const ADJ=[
+['beau','belle','beaux','belles','bel','B','beautiful / handsome'],['joli','jolie','jolis','jolies','','B','pretty'],['vilain','vilaine','vilains','vilaines','','B','ugly / naughty'],
+['jeune','jeune','jeunes','jeunes','','A','young'],['vieux','vieille','vieux','vieilles','vieil','A','old'],
+['nouveau','nouvelle','nouveaux','nouvelles','nouvel','N','new'],
+['bon','bonne','bons','bonnes','','G','good'],['mauvais','mauvaise','mauvais','mauvaises','','G','bad'],['gentil','gentille','gentils','gentilles','','G','nice / kind',1],
+['grand','grande','grands','grandes','','S','big / tall'],['petit','petite','petits','petites','','S','small / short'],['haut','haute','hauts','hautes','','S','high / tall'],['court','courte','courts','courtes','','S','short (length)'],['long','longue','longs','longues','','S','long'],['gros','grosse','gros','grosses','','S','big / fat'],
+['heureux','heureuse','heureux','heureuses','','','happy',1],['sympa','sympa','sympas','sympas','','','nice / friendly',1],['fort','forte','forts','fortes','','','strong',1],['blond','blonde','blonds','blondes','','','blond',1],
+['sportif','sportive','sportifs','sportives','','','athletic',1],['gourmand','gourmande','gourmands','gourmandes','','','loves to eat',1],['actif','active','actifs','actives','','','active',1],
+['généreux','généreuse','généreux','généreuses','','','generous',1],['châtain','châtain','châtains','châtains','','','light brown (hair)',1],['mignon','mignonne','mignons','mignonnes','','','cute'],
+['roux','rousse','roux','rousses','','','red-haired',1],['fier','fière','fiers','fières','','','proud',1],['cher','chère','chers','chères','','','expensive / dear'],['léger','légère','légers','légères','','','light (weight)'],
+['entier','entière','entiers','entières','','','whole / entire'],['amer','amère','amers','amères','','','bitter'],['premier','première','premiers','premières','','','first'],['dernier','dernière','derniers','dernières','','','last'],
+['intelligent','intelligente','intelligents','intelligentes','','','smart',1],['amusant','amusante','amusants','amusantes','','','fun / funny'],['intéressant','intéressante','intéressants','intéressantes','','','interesting'],
+['mince','mince','minces','minces','','','thin / slim',1],['laid','laide','laids','laides','','','ugly'],['fou','folle','fous','folles','','','crazy',1],
+['chic','chic','chic','chic','','','stylish'],['cool','cool','cool','cool','','','cool'],['super','super','super','super','','','great']];
+const COLORS=[['blanc','blanche','blancs','blanches','','','white'],['violet','violette','violets','violettes','','','purple'],['noir','noire','noirs','noires','','','black'],['vert','verte','verts','vertes','','','green'],['bleu','bleue','bleus','bleues','','','blue'],['gris','grise','gris','grises','','','gray'],['brun','brune','bruns','brunes','','','brown'],['rouge','rouge','rouges','rouges','','','red'],['jaune','jaune','jaunes','jaunes','','','yellow'],['rose','rose','roses','roses','','','pink'],['orange','orange','orange','orange','','','orange'],['marron','marron','marron','marron','','','brown (chestnut)']];
+const ALT={'châtain':{1:['châtaine'],3:['châtaines']},'payer':1};
+// nouns: [singular, gender, starts with vowel/silent h, person?]
+const NOUNS=[['livre','m',0],['voiture','f',0],['maison','f',0],['homme','m',1,1],['femme','f',0,1],['film','m',0],['ami','m',1,1],['amie','f',1,1],['hôtel','m',1],['arbre','m',1],['chien','m',0,1],['fille','f',0,1],['garçon','m',0,1],['jupe','f',0],['pull','m',0],['appartement','m',1],['chambre','f',0],['lit','m',0],['idée','f',1],['prof','m',0,1],['étudiante','f',1,1],['ordinateur','m',1]];
+const CNOUNS=[['trousse','f'],['ordinateur','m'],['stylos','m',1],['gommes','f',1],['télévision','f'],['montre','f'],['pull-over','m'],['jupe','f'],['short','m'],['baskets','f',1],['calculatrice','f'],['chiens','m',1],['voitures','f',1],['sac','m'],['chaussures','f',1],['chemise','f'],['cahiers','m',1],['chaises','f',1]];
+
+/* ================= verbs ================= */
+const IRR={'être':['suis','es','est','sommes','êtes','sont'],'avoir':['ai','as','a','avons','avez','ont'],'aller':['vais','vas','va','allons','allez','vont'],
+ 'prendre':['prends','prends','prend','prenons','prenez','prennent'],'comprendre':['comprends','comprends','comprend','comprenons','comprenez','comprennent'],
+ 'apprendre':['apprends','apprends','apprend','apprenons','apprenez','apprennent'],'surprendre':['surprends','surprends','surprend','surprenons','surprenez','surprennent']};
+const END=['e','es','e','ons','ez','ent'];
+const naive=(v,i)=>v.slice(0,-2)+END[i];
+function conj(v,i){ if(IRR[v]) return [IRR[v][i]]; const st=v.slice(0,-2);
+  if(v==='acheter') return [(i===3||i===4?'achet':'achèt')+END[i]];
+  if(v.endsWith('ger')&&i===3) return [st+'eons'];
+  if(v.endsWith('cer')&&i===3) return [st.slice(0,-1)+'çons'];
+  if(v.endsWith('yer')&&[0,1,2,5].includes(i)){ const f=st.slice(0,-1)+'i'+END[i]; return v.endsWith('ayer')?[f,st+END[i]]:[f]; }
+  return [st+END[i]]; }
+const PRON=['je','tu','il','elle','on','nous','vous','ils','elles'], PIDX=[0,1,2,2,2,3,4,5,5];
+const vowel=w=>/^[aeéèêiîoôuyh]/i.test(w);
+function verbRule(v,i){
+  if(['être','avoir','aller'].includes(v)) return `${v} is irregular: ${IRR[v].join(', ')}.`;
+  if(IRR[v]) return `-prendre verbs: -ds, -ds, -d, -nons, -nez, -nnent (double n for ils/elles).`;
+  if(v==='acheter') return 'acheter adds an accent (è) in the boot: j’achète, tu achètes, il achète, ils achètent. No accent for nous/vous.';
+  if(v.endsWith('ger')) return i===3?'-ger verbs keep the e before -ons so the g stays soft: nous mangeons.':'-ger verbs only change in the nous form (nous ___eons).';
+  if(v.endsWith('cer')) return i===3?'-cer verbs use ç before -ons so the c stays soft: nous commençons.':'-cer verbs only change in the nous form (nous ___çons).';
+  if(v.endsWith('yer')) return [0,1,2,5].includes(i)?`-yer verbs: y → i in the boot (je, tu, il/elle, ils/elles).${v.endsWith('ayer')?' For -ayer verbs, keeping the y is also allowed.':''}`:'-yer verbs keep the y for nous and vous.';
+  return 'Regular -er: drop -er, add -e, -es, -e, -ons, -ez, -ent.'; }
+
+/* ================= grading ================= */
+const fold=s=>s.normalize('NFD').replace(/[̀-ͯ]/g,'');
+const clean=s=>String(s).toLowerCase().replace(/[’`´]/g,"'").replace(/\s+/g,' ').replace(/^[\s.!?,;:]+|[\s.!?,;:]+$/g,'').trim();
+const key=s=>clean(s).replace(/[.\-]/g,'').replace(/\s*'\s*/g,"'").replace(/\s+/g,' ').trim();
+const enKey=s=>clean(s).replace(/\(.*?\)/g,' ').replace(/^(to be |to |the |a |an )/,'').replace(/\s+/g,' ').trim();
+function lev(a,b){const m=a.length,n=b.length;if(!m)return n;if(!n)return m;let p=Array.from({length:n+1},(_,j)=>j);for(let i=1;i<=m;i++){const c=[i];for(let j=1;j<=n;j++)c[j]=Math.min(p[j]+1,c[j-1]+1,p[j-1]+(a[i-1]===b[j-1]?0:1));p=c;}return p[n];}
+const PRE=/^(je |j'|tu |il |elle |on |nous |vous |ils |elles )/;
+function check(it,typed){
+  if(it.en){ const t=enKey(typed); const alts=it.ans.flatMap(a=>a.split(/\s*\/\s*/)).map(enKey).filter(Boolean);
+    return alts.some(a=>a===t||(a.length>4&&lev(a,t)<=(a.length>9?2:1)))?'ok':'no'; }
+  let t=key(typed); if(it.strip) t=t.replace(PRE,'');
+  const alts=it.ans.map(key); if(alts.includes(t)) return 'ok';
+  if(alts.map(fold).includes(fold(t))) return 'accent'; return 'no'; }
+
+/* ================= UI pieces ================= */
+let TALLY=store.get('tally',{r:0,t:0});
+const drawTally=()=>{$('#tally').textContent=`${TALLY.r} / ${TALLY.t}`;};
+const bump=(ok,undo)=>{ if(undo){TALLY.r++;} else {TALLY.t++; if(ok) TALLY.r++;} store.set('tally',TALLY); drawTally(); };
+$('#reset').onclick=()=>{TALLY={r:0,t:0};store.set('tally',TALLY);drawTally();}; drawTally();
+function chips(id,opts,k,onChange){ let cur=store.get(k,Object.keys(opts)[0]); if(!(cur in opts)) cur=Object.keys(opts)[0];
+  const draw=()=>{ $('#'+id).innerHTML=Object.entries(opts).map(([x,l])=>`<button class="chip" data-k="${x}" aria-pressed="${String(cur)===String(x)}">${l}</button>`).join('');
+    document.querySelectorAll('#'+id+' .chip').forEach(c=>c.onclick=()=>{ cur=c.dataset.k; store.set(k,cur); draw(); onChange(); }); };
+  draw(); return ()=>cur; }
+const ACC=['é','è','ê','à','â','ç','ô','î','ï','ë','û','ù','’'];
+const accentBar=id=>`<div class="accents" aria-label="Accents">${ACC.map(c=>`<button type="button" data-c="${c==='’'?"'":c}" tabindex="-1">${c}</button>`).join('')}</div>`;
+// item helpers
+function mc(q,a,pool,why,label){ const d=shuffle(uniq(pool).filter(x=>x!==a)).slice(0,3); return {q,a,choices:shuffle([a,...d]),why,label}; }
+const typed=(q,ans,why,label,extra={})=>({q,ans:Array.isArray(ans)?ans:[ans],why,label,...extra});
+
+/* ================= the drill engine ================= */
+let ACTIVE=null;
+function drill(id,gens){
+  const getK=chips(id+'-chips',Object.fromEntries(Object.entries(gens).map(([k,g])=>[k,g.label])),id+'K',()=>{S.pending=[];S.r=0;S.t=0;next();});
+  const S={pending:[],cur:null,state:'ask',typed:'',res:null,r:0,t:0,last:''};
+  const gen=()=>{ let k=getK(); if(k==='mix') k=pick(Object.keys(gens).filter(x=>x!=='mix')); for(let i=0;i<10;i++){ const it=gens[k].fn(); if(it.q!==S.last) return it; } return gens[k].fn(); };
+  function next(){ S.pending.forEach(p=>p.w--); const d=S.pending.findIndex(p=>p.w<=0); let it;
+    if(d>=0){ it={...S.pending.splice(d,1)[0].it,again:true}; if(it.choices) it.choices=shuffle(it.choices); } else it=gen();
+    S.cur=it; S.last=it.q; S.state='ask'; S.typed=''; S.res=null; S.pick=null; render(); }
+  function finish(ok){ S.t++; if(ok) S.r++; else S.pending.push({it:S.cur,w:3}); bump(ok); S.state='done'; render(); }
+  function render(){ const it=S.cur, el=$('#'+id+'-card'), done=S.state==='done';
+    $('#'+id+'-count').textContent=`${S.r} / ${S.t}${S.pending.length?` · ${S.pending.length} coming back`:''}`;
+    let body='';
+    if(it.choices){ body=`<div class="choices">${it.choices.map((c,i)=>{ let cls=''; if(done){ if(c===it.a) cls='right'; else if(c===S.pick) cls='wrong'; }
+        return `<button class="choice ${cls}" data-i="${i}" ${done?'disabled':''}><span class="k">${i+1}</span><span>${c}</span></button>`; }).join('')}</div>`; }
+    else { body=`<label for="${id}-in" style="position:absolute;left:-9999px">Your answer</label><input type="text" id="${id}-in" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="${it.ph||'Type your answer'}" value="${esc(S.typed)}" ${done?'readonly':''}>${!it.en&&!done?accentBar():''}`; }
+    let fb='';
+    if(done){ const r=S.res, ok=r==='ok'||r==='accent'||r==='over';
+      const head= r==='ok'?'Right.': r==='accent'?'Right, but check your accents.': r==='over'?'Counted as right.': r==='skip'?'Here it is:':'Not quite.';
+      const ans=it.choices?it.a:it.ans.join(' · ');
+      fb=`<div class="fb ${r==='accent'?'mid':ok?'ok':'no'}"><strong>${head}</strong>${(!ok||r==='accent'||!it.choices)?`<p class="ans">${it.choices?ans:esc(ans)}</p>`:''}${it.why?`<p class="why">${it.why}</p>`:''}${!ok?'<p class="why">This one comes back in a few questions.</p>':''}</div>`; }
+    const btns= done? `<button class="btn primary" id="${id}-next">Next</button>${!it.choices&&S.res==='no'?`<button class="btn ghost" id="${id}-over">I was right, count it</button>`:''}<span class="kbd">Enter</span>`
+      : it.choices? '<span class="kbd">Press 1–4</span>' : `<button class="btn primary" id="${id}-check">Check</button><button class="btn ghost" id="${id}-skip">Show me</button><span class="kbd">Enter</span>`;
+    el.innerHTML=`<div class="card"><p class="label">${it.again?'<span class="again">↻ again · </span>':''}${it.label||''}</p><p class="q">${it.q}</p>${body}${fb}<div class="row">${btns}</div></div>`;
+    if(it.choices&&!done) el.querySelectorAll('.choice').forEach(b=>b.onclick=()=>choose(+b.dataset.i));
+    if(!it.choices&&!done){ const inp=$('#'+id+'-in'); inp.focus(); inp.oninput=()=>S.typed=inp.value;
+      inp.onkeydown=e=>{ if(e.key==='Enter'){ e.preventDefault(); submit(); } };
+      el.querySelectorAll('.accents button').forEach(b=>{ b.onmousedown=e=>e.preventDefault(); b.onclick=()=>{ const s=inp.selectionStart??inp.value.length, en=inp.selectionEnd??s; inp.value=inp.value.slice(0,s)+b.dataset.c+inp.value.slice(en); inp.setSelectionRange(s+1,s+1); S.typed=inp.value; inp.focus(); }; });
+      $('#'+id+'-check').onclick=submit; $('#'+id+'-skip').onclick=()=>{ S.res='skip'; finish(false); }; }
+    if(done){ const n=$('#'+id+'-next'); n.onclick=next; n.focus(); const o=$('#'+id+'-over'); if(o) o.onclick=()=>{ S.res='over'; S.r++; S.pending.pop(); bump(true,true); render(); }; }
+  }
+  function submit(){ if(!S.typed.trim()){ $('#'+id+'-in').focus(); return; } S.res=check(S.cur,S.typed); finish(S.res!=='no'); }
+  function choose(i){ if(S.state!=='ask') return; S.pick=S.cur.choices[i]; S.res=S.pick===S.cur.a?'ok':'no'; finish(S.res==='ok'); }
+  const api={next,onKey:e=>{ if(S.state==='ask'&&S.cur.choices&&/^[1-4]$/.test(e.key)&&e.target.tagName!=='INPUT'){ const i=+e.key-1; if(i<S.cur.choices.length){ e.preventDefault(); choose(i);} } }};
+  return api; }
+
+/* ================= generators ================= */
+const deArt={'le':'du','la':'de la',"l'":"de l'",'les':'des'}, aArt={'le':'au','la':'à la',"l'":"à l'",'les':'aux'};
+const PNOUNS=[['le','bureau'],['la','porte'],["l'",'armoire'],['les','fenêtres'],['le','lit'],['la','lampe'],["l'",'escalier'],['les','étagères'],['le','tapis'],['le','canapé'],['la','commode'],['le','placard'],['les','rideaux'],['la','fenêtre'],['le','poster'],['la','cuisine'],['le','salon']];
+const SUBJ=['Le chat est','Mon sac est','Le chien est','Mon téléphone est','Le ballon est','Ma trousse est'];
+const PLACES=[['le','parc'],['la','plage'],["l'",'école'],['les','magasins'],['le','cinéma'],['la','piscine'],["l'",'hôtel'],['les','toilettes'],['le','café'],['la','bibliothèque'],["l'",'aéroport'],['le','supermarché']];
+const prepAns=(p,art)=>p.endsWith(' de')?p.slice(0,-3)+' '+deArt[art]:p+' '+art;
+const nounTxt=(art,n)=>art==="l'"?n:n;
+function prepSentence(p){ const [art,n]=pick(PNOUNS); return {s:pick(SUBJ), art, n, ans:prepAns(p[0],art)}; }
+const blank='<span class="blank">___</span>';
+const prepWhy=(p,art)=>p[2]?`${p[0]} + ${art} → ${prepAns(p[0],art)}. ${art==='le'?'de + le = du.':art==='les'?'de + les = des.':art==='la'?'de + la doesn’t change.':'de + l’ doesn’t change.'}`:`${p[0]} has no de, so the article stays the same.`;
+
+// adjectives
+const allAdj=[...ADJ,...COLORS];
+const PHR=ADJ.filter(a=>!['premier','dernier'].includes(a[0]));
+const idxOf=(g,pl)=>(pl?2:0)+(g==='f'?1:0);
+const COLN=['masculine singular','feminine singular','masculine plural','feminine plural'];
+function adjForms(a,g,pl,nounVowel){ const i=idxOf(g,pl); if(a[5]&&a[4]&&!pl&&g==='m'&&nounVowel) return [a[4]]; const alt=(ALT[a[0]]||{})[i]||[]; return [a[i],...alt]; }
+const plural=n=>/[sx]$/.test(n)?n:n.endsWith('eau')?n+'x':n+'s';
+function phrase(a,n,pl){ const [w,g,v]=n; const form=adjForms(a,g,pl,v)[0]; const noun=pl?plural(w):w; const bangs=!!a[5];
+  const art=pl?(bangs?'de':'des'):(g==='m'?'un':'une'); return {art,noun,form,bangs,txt:bangs?`${art} ${form} ${noun}`:`${art} ${noun} ${form}`}; }
+function nounFor(a){ const pool=a[7]?NOUNS.filter(n=>n[3]):NOUNS.filter(n=>!n[3]||!['cher','léger','entier','amer','premier','dernier'].includes(a[0])); return pick(pool); }
+function adjWhy(a,p,pl,g,special){ const forms=`${a[0]} · ${a[1]} · ${a[2]} · ${a[3]}`; let s=`${forms}.`;
+  if(a[0]===a[1]&&a[1]===a[2]) s=`${a[0]} never changes (invariable).`;
+  if(special) s+=` ${a[4]} is the special form before a masculine singular noun that starts with a vowel or silent h.`;
+  if(a[5]) s+=` BANGS adjective (${({B:'Beauty',A:'Age',N:'Newness',G:'Goodness',S:'Size'})[a[5]]}), so it goes before the noun.`; else if(p) s+=' Not BANGS, so it goes after the noun.';
+  if(a[5]&&pl&&p) s+=' des becomes de when a plural adjective comes before the noun.'; return s; }
+function femDistract(m,f){ return uniq([m+'e',m+'se',m.replace(/x$/,'se'),m.replace(/f$/,'ve'),m+'ne',m+'le',m+'te',m.replace(/er$/,'ere'),m,f+'s',m+'s']).filter(x=>x!==f); }
+function plDistract(m,mp){ return uniq([m+'s',m+'x',m,m.replace(/x$/,'s'),m+'es',mp.replace(/x$/,'s')]).filter(x=>x!==mp); }
+
+/* --- multiple choice topics --- */
+const CULTURE=[
+ ['Compared to a typical American house, a French house is usually…','smaller, with a smaller yard',['bigger, with a bigger yard','about the same size','always an apartment']],
+ ['French yards are usually…','closed in by walls, hedges, or fences for privacy',['open to the street with no fence','only in the front','shared with the neighbors']],
+ ['At night, from the street, a French house usually looks…','dark: the shutters (les volets) and curtains are closed',['bright, with every window lit up','decorated with lights all year','the same as an American house']],
+ ['Inside a French home, the doors to rooms are usually kept…','closed, for privacy',['wide open','taken off','locked with a key']],
+ ['Electricity is expensive in France, so French people usually…','turn off the lights when they leave a room',['leave the lights on all night','buy extra lamps','never use lights at night']],
+ ['What is <b>la minuterie</b>?','a timed hallway or stairwell light that shuts off by itself',['a kitchen timer for cooking','a very small bedroom','an alarm clock']],
+ ['Landline calls were expensive in France, so phone calls tended to be…','short and to the point',['very long','only on weekends','only from phone booths']],
+ ['In many French homes, <b>les toilettes</b> (les W.-C.) are…','a small room separate from the salle de bains',['inside the kitchen','always outside','inside the bedroom']],
+ ['The big idea about size: French things (cars, streets, houses, yards) are generally…','smaller than American ones',['bigger than American ones','the same size as American ones','only small in Paris']],
+ ['French people are generally described as more ___ than Americans.','private',['outgoing with strangers','loud','open about their homes']],
+ ['A typical American suburb at night looks like…','similar houses with lights on and curtains open',['houses hidden behind high walls','completely dark streets','closed shutters everywhere']]];
+const AVSCEN=[["Je veux de l'eau. J'ai ___.",'soif'],["Il est minuit. Tu as ___.",'sommeil'],["Il neige et je n'ai pas de manteau. J'ai ___.",'froid'],["2 + 2 = 4 ? Tu as ___ !",'raison'],["2 + 2 = 5 ? Non, tu as ___.",'tort'],["J'ai ___ à la tête.",'mal'],["Je veux une pizza ! J'ai ___.",'faim'],["Il fait 35 degrés. J'ai ___.",'chaud'],["Il y a une araignée ! J'ai ___.",'peur'],["J'ai gagné à la loterie ! J'ai de la ___.",'chance'],["Les vacances commencent demain ! J'ai ___ !",'hâte'],["Je suis triste aujourd'hui. J'ai le ___.",'cafard'],["J'ai quatorze ___.",'ans'],["J'ai ___ d'un stylo pour l'examen.",'besoin'],["J'ai ___ d'aller au cinéma ce soir. (I feel like it)",'envie']];
+const AVWORDS=['soif','sommeil','froid','raison','tort','mal','faim','chaud','peur','chance','hâte','cafard','ans','besoin','envie','honte'];
+const QSCEN=[["___ tu manges ? — Je mange une pizza.","Qu'est-ce que"],["___ est ton prof de français ? — C'est Mme Greene.","Qui"],["___ tu vas au cinéma ? — Avec mon ami Paul.","Avec qui"],["___ habites-tu ? — À Boston.","Où"],["___ est ton anniversaire ? — En mai.","Quand"],["___ tu étudies ? — Parce que j'ai un examen.","Pourquoi"],["___ vas-tu ? — Je vais bien, merci.","Comment"],["___ frères as-tu ? — J'ai deux frères.","Combien de"],["___ commence le film ? — À huit heures.","À quelle heure"],["___ es-tu ? — Je suis de Paris.","D'où"],["___ est ta couleur préférée ? — Le bleu.","Quelle"],["___ tu aimes le foot ? — Oui !","Est-ce que"],["___ livre préféres-tu ? — Le livre rouge.","Quel"]];
+const QWORDS=["Qu'est-ce que","Qui","Avec qui","Où","Quand","Pourquoi","Comment","Combien de","À quelle heure","D'où","Quelle","Est-ce que","Quel"];
+const OUISI=[["Tu n'as pas faim ? (You ARE hungry.)","Si !",["Oui !","Non !","Peut-être."],"Si = yes to a negative question."],["Tu as faim ? (You ARE hungry.)","Oui !",["Si !","Non !","Moi."],"Oui = yes to a normal question."],["Tu n'aimes pas les maths ? (You DON'T like math.)","Non.",["Si !","Oui !","Quand ?"],"Non agrees with the negative: no, I don't."],["Tu ne parles pas français ? (You DO speak French.)","Si !",["Oui !","Non !","Peut-être."],"Si = yes to a negative question."],["In « S'il pleut, je reste à la maison », si means…","if",["yes","so","six"],"Si has 3 meanings: yes (to a negative question), if, and so."],["In « Il est si grand ! », si means…","so (very)",["if","yes","six"],"Si has 3 meanings: yes (to a negative question), if, and so."],["You have no idea. You say…","Je ne sais pas.",["Peut-être.","Si.","Moi."],"Je ne sais pas = I don't know. Peut-être = maybe."]];
+const ALLV=[...VERBS.map(v=>v[0]),...GER.map(v=>v[0]),...YER.map(v=>v[0]),...CER.map(v=>v[0])];
+const CONJV=['être','avoir','aller','prendre','comprendre','apprendre','surprendre','jouer','danser','parler','écouter','aimer','travailler','acheter','manger','voyager','nager','partager','ranger','commencer','lancer','effacer','avancer','envoyer','nettoyer','payer','employer','essuyer','ennuyer','étudier','habiter'];
+function conjItem(v,mcMode,bias){ let pi=Math.floor(Math.random()*9);
+  if(bias){ if(/[gc]er$/.test(v)&&!IRR[v]&&Math.random()<.65) pi=5; else if(v.endsWith('yer')&&Math.random()<.6) pi=pick([0,1,2,3,7,8]); }
+  const i=PIDX[pi], forms=conj(v,i); let pr=PRON[pi]; if(pr==='je'&&vowel(forms[0])) pr="j’";
+  const q=`<span class="fr">${pr}</span> ${blank} <span class="hint">(${v})</span>`;
+  if(mcMode){ const pool=[...[0,1,2,3,4,5].filter(j=>j!==i).map(j=>conj(v,j)[0]), naive(v,i), v.endsWith('ger')&&i===3?v.slice(0,-2)+'ons':'', v.endsWith('ger')&&i===5?v.slice(0,-2)+'eont':'', v.endsWith('cer')&&i===3?v.slice(0,-2)+'ons':'', v.endsWith('yer')?v.slice(0,-2)+END[i]:'', IRR[v]&&i===4?v.slice(0,-2)+'ez':''].filter(x=>x&&!forms.includes(x));
+    return mc(q,forms[0],pool,verbRule(v,i),'Conjugate'); }
+  return typed(q,forms,verbRule(v,i),`Conjugate · ${v}`,{strip:true,ph:'Just the verb'}); }
+function prepMC(){ const r=Math.random();
+  if(r<.3){ const p=pick(PREP); return mc(`What does <span class="fr">${p[0]}</span> mean?`,p[1],PREP.map(x=>x[1]),'', 'Prépositions'); }
+  if(r<.5){ const p=pick(PREP); return mc(`How do you say <b>${p[1]}</b>?`,p[0],PREP.map(x=>x[0]),'','Prépositions'); }
+  if(r<.62){ const p=pick(PREP.filter(x=>!x[2])); return mc('Which preposition does NOT use <b>de</b>?',p[0],PREP.filter(x=>x[2]).map(x=>x[0]),'No de: devant, derrière, entre, sous, dans, sur.','Prépositions'); }
+  if(r<.78){ const w=pick(['à','de']), art=pick(['le','la',"l'",'les']), a=(w==='à'?aArt:deArt)[art];
+    return mc(`<span class="fr">${w} + ${art}</span> = ?`,a,w==='à'?['au','à le','aux','à les','à la','du']:['du','de le','des','de les','de la','au'],'à + le = au, à + les = aux, de + le = du, de + les = des. la and l’ never change.','Contractions'); }
+  const p=pick(PREP), s=prepSentence(p); const base=p[2]?p[0].slice(0,-3):p[0];
+  const pool=p[2]?[base+' du',base+' de le',base+' des',base+' de la',base+" de l'",base+' de les']:[p[0]+' '+s.art,p[0]+' du',p[0]+' de '+s.art,p[0]+' des',p[0]+' au'];
+  return mc(`${s.s} ${blank} ${s.n}. <span class="hint">(${p[1]})</span>`,s.ans,pool,prepWhy(p,s.art),'Prépositions'); }
+function adjMC(){ const r=Math.random();
+  if(r<.22){ const a=pick(allAdj.filter(x=>x[0]!==x[1]||Math.random()<.3)); return mc(`Feminine of <span class="fr">${a[0]}</span>?`,a[1],femDistract(a[0],a[1]),adjWhy(a),'Adjectives'); }
+  if(r<.36){ const a=pick(allAdj); return mc(`Masculine plural of <span class="fr">${a[0]}</span>?`,a[2],plDistract(a[0],a[2]),adjWhy(a),'Adjectives'); }
+  if(r<.66){ const a=pick(PHR.filter(x=>x[0]!==x[1]||x[5])); const pl=Math.random()<.4; let n=nounFor(a); if(a[4]&&!pl&&Math.random()<.6) n=pick(NOUNS.filter(x=>x[1]==='m'&&x[2]&&(!a[7]||x[3]))); const p=phrase(a,n,pl);
+    const wrong=[p.bangs?`${pl?'des':p.art} ${p.noun} ${p.form}`:`${p.art} ${p.form} ${p.noun}`];
+    if(p.bangs&&pl) wrong.push(`des ${p.form} ${p.noun}`);
+    if(p.form===a[4]) wrong.push(`${p.art} ${a[0]} ${p.noun}`);
+    const other=[0,1,2,3].map(i=>a[i]).filter(f=>f!==p.form); other.forEach(f=>wrong.push(p.bangs?`${p.art} ${f} ${p.noun}`:`${p.art} ${p.noun} ${f}`));
+    other.forEach(f=>wrong.push(p.bangs?`${pl?'des':p.art} ${p.noun} ${f}`:`${p.art} ${f} ${p.noun}`));
+    return mc(`Which is correct? <span class="hint">${n[0]} (${n[1]}.) + ${a[0]}${pl?', plural':''}</span>`,p.txt,wrong,adjWhy(a,true,pl,n[1],p.form===a[4]),'Adjectives · placement'); }
+  if(r<.76){ const L=pick(['B','A','N','G','S']), M={B:'Beauty',A:'Age',N:'Newness',G:'Goodness',S:'Size'}; return mc(`In BANGS, what does <b>${L}</b> stand for?`,M[L],Object.values(M),'BANGS = Beauty, Age, Newness, Goodness, Size. These go BEFORE the noun.','BANGS'); }
+  if(r<.84){ const a=pick(ADJ.filter(x=>x[5])); return mc(`Where does <span class="fr">${a[0]}</span> go?`,'before the noun',['after the noun','at the end of the sentence','either place'],adjWhy(a),'BANGS'); }
+  if(r<.9){ const a=pick(['marron','orange','chic','cool','super']); return mc('Which adjective NEVER changes?',a,['blanc','violet','gris','vert','noir','heureux','petit','rose'],'Invariable: marron, orange, chic, cool, super. (sympa only adds -s in the plural.)','Adjectives'); }
+  if(r<.95) return mc('When do you use <span class="fr">bel, nouvel, vieil</span>?','before a masculine singular noun starting with a vowel or silent h',['before any feminine noun','before any plural noun','after the noun'],'un bel homme, un nouvel ami, un vieil hôtel.','BANGS');
+  return mc('<span class="fr">des</span> becomes <span class="fr">de</span> when…','a plural adjective comes before the noun',['the noun is feminine','the adjective comes after the noun','the sentence is a question'],'de mauvais films, de vieilles femmes, but des livres intéressants.','BANGS'); }
+function avoirMC(){ const r=Math.random();
+  if(r<.45){ const [s,w]=pick(AVSCEN); return mc(s.replace('___',blank),w,AVWORDS,'','Avoir expressions'); }
+  if(r<.75){ const a=pick(AVOIR); return mc(`What does <span class="fr">${a[0]}</span> mean?`,a[1],AVOIR.map(x=>x[1]),'','Avoir expressions'); }
+  const a=pick(AVOIR); return mc(`How do you say <b>${a[1]}</b>?`,a[0],AVOIR.map(x=>x[0]),'','Avoir expressions'); }
+function questMC(){ const r=Math.random();
+  if(r<.45){ const [s,w]=pick(QSCEN); return mc(s.replace('___',blank),w,QWORDS,'','Question words'); }
+  if(r<.7){ const o=pick(OUISI); return mc(o[0],o[1],o[2],o[3],'Oui / Si / Non'); }
+  const q=pick(QW); return mc(`What does <span class="fr">${q[0]}</span> mean?`,q[1],QW.map(x=>x[1]),'','Question words'); }
+function verbsMC(){ const r=Math.random();
+  if(r<.55) return conjItem(pick(CONJV),true,true);
+  if(r<.8){ const v=pick([...VERBS,...GER,...YER,...CER]); return mc(`What does <span class="fr">${v[0]}</span> mean?`,v[1],[...VERBS,...GER,...YER,...CER].map(x=>x[1]),'','Verbs'); }
+  return pick([()=>mc('-ger verbs (manger, nager) change in which form?','nous',['je','vous','ils/elles'],'nous mangeons: keep the e so the g stays soft.','Spelling-change verbs'),
+    ()=>mc('-cer verbs (commencer) change how?','c → ç in the nous form',['c → s in all forms','add an e in the nous form','no change'],'nous commençons.','Spelling-change verbs'),
+    ()=>mc('-yer verbs (envoyer, nettoyer) change y → i for…','je, tu, il/elle, ils/elles (the boot)',['nous and vous only','only je','every form'],"j'envoie, nous envoyons, ils envoient.",'Spelling-change verbs'),
+    ()=>mc('avoir: vous ___','avez',['allez','avons','êtes'],'avoir: ai, as, a, avons, avez, ont.','Verbs'),
+    ()=>mc('être: nous ___','sommes',['sont','êtes','avons'],'être: suis, es, est, sommes, êtes, sont.','Verbs'),
+    ()=>mc('aller: ils ___','vont',['sont','ont','allent'],'aller: vais, vas, va, allons, allez, vont.','Verbs')])(); }
+function houseMC(){ const h=pick(HOUSE); return Math.random()<.55? mc(`What does <span class="fr">${h[0]}</span> mean?`,h[1],HOUSE.map(x=>x[1]),'','La maison') : mc(`How do you say <b>${h[1]}</b>?`,h[0],HOUSE.map(x=>x[0]),'','La maison'); }
+function cultureMC(){ const c=pick(CULTURE); return mc(c[0],c[1],c[2],'','Culture'); }
+
+/* --- vocab (typed) --- */
+let vdir;
+function vocabGen(list,label){ return ()=>{ const v=pick(list); const fr=v[0].split(' / ');
+  if(vdir()==='ef') return typed(`<b>${esc(v[1])}</b>${v[2]?`<span class="hint">${esc(v[2])}</span>`:''}`, [...fr, ...(v[0].includes('W.-C.')?['les WC','les toilettes']:[])], label==='La maison'?'Include the article (le, la, un, une…).':'', label+' · English → French',{ph:'Type the French'});
+  return typed(`<span class="fr">${esc(v[0])}</span>`, [v[1]], '', label+' · French → English',{en:true,ph:'Type the English'}); }; }
+
+/* --- adjectives (typed) --- */
+function adjForm(){ const a=pick(PHR); const pl=Math.random()<.45; let n=nounFor(a); if(a[4]&&!pl&&Math.random()<.5) n=pick(NOUNS.filter(x=>x[1]==='m'&&x[2]&&(!a[7]||x[3]))); const p=phrase(a,n,pl);
+  const q=p.bangs?`${p.art} ${blank} ${p.noun}`:`${p.art} ${p.noun} ${blank}`;
+  return typed(`${q} <span class="hint">(${a[0]})</span>`, adjForms(a,n[1],pl,n[2]), adjWhy(a,true,pl,n[1],p.form===a[4]), `Agreement · ${n[1]==='m'?'masc.':'fem.'} ${pl?'plural':'singular'}`); }
+function adjBuild(){ const a=pick(PHR.filter(x=>x[5]||Math.random()<.5)); const pl=Math.random()<.45; let n=nounFor(a); if(a[4]&&!pl&&Math.random()<.5) n=pick(NOUNS.filter(x=>x[1]==='m'&&x[2]&&(!a[7]||x[3]))); const p=phrase(a,n,pl);
+  const art0=pl?'des':(n[1]==='m'?'un':'une');
+  return typed(`<span class="fr">${art0}</span> + <span class="fr">${pl?plural(n[0]):n[0]}</span> + <span class="fr">${a[0]}</span><span class="hint">Write the whole phrase in the right order.</span>`, [p.txt], adjWhy(a,true,pl,n[1],p.form===a[4]), 'Build the phrase (BANGS)',{ph:'e.g. une haute maison'}); }
+function adjColor(){ const c=pick(COLORS), n=pick(CNOUNS); const pl=!!n[2]; const i=idxOf(n[1],pl);
+  const art=pl?'des':(n[1]==='m'?'un':'une');
+  return typed(`${art} ${n[0]} ${blank} <span class="hint">(${c[0]})${pl?` · ${n[1]}. plural`:''}</span>`, [c[i]], adjWhy(c), 'Colors'); }
+function adjTable(){ const a=pick(allAdj); const i=1+Math.floor(Math.random()*3);
+  return typed(`<span class="fr">${a[0]}</span> → <b>${COLN[i]}</b>`, [a[i],...((ALT[a[0]]||{})[i]||[])], adjWhy(a), 'All forms'); }
+
+/* --- prepositions (typed) --- */
+function prepMean(){ const p=pick(PREP), s=prepSentence(p); return typed(`${s.s} ${blank} ${s.n}. <span class="hint">(${p[1]})</span>`, [s.ans], prepWhy(p,s.art), 'From English',{ph:'Type the missing words'}); }
+function prepCombine(){ const p=pick(PREP.filter(x=>x[2]||Math.random()<.3)), s=prepSentence(p); return typed(`${s.s} ${blank} ${s.n}. <span class="hint">(${p[0]} + ${s.art})</span>`, [s.ans], prepWhy(p,s.art), 'Combine',{ph:'Type the missing words'}); }
+function prepA(){ const [art,n]=pick(PLACES); return typed(`Je vais ${blank} ${n}. <span class="hint">(à + ${art})</span>`, [aArt[art]], 'à + le = au · à + les = aux · à la and à l’ don’t change.', 'à + article'); }
+function prepDe(){ const [art,n]=pick(PLACES); return typed(`Je reviens ${blank} ${n}. <span class="hint">(de + ${art})</span>`, [deArt[art]], 'de + le = du · de + les = des · de la and de l’ don’t change.', 'de + article'); }
+
+/* ================= build tabs ================= */
+const D={};
+D.mc=drill('mc',{mix:{label:'Mix',fn:()=>null},prep:{label:'Prépositions',fn:prepMC},adj:{label:'Adjectives',fn:adjMC},avoir:{label:'Avoir',fn:avoirMC},quest:{label:'Questions',fn:questMC},verbs:{label:'Verbs',fn:verbsMC},house:{label:'Maison',fn:houseMC},culture:{label:'Culture',fn:cultureMC}});
+vdir=chips('vocab-dir',{ef:'English → French',fe:'French → English'},'vdir',()=>D.vocab.next());
+D.vocab=drill('vocab',{prep:{label:'Prépositions',fn:vocabGen(PREP,'Prépositions')},avoir:{label:'Avoir',fn:vocabGen(AVOIR,'Avoir')},quest:{label:'Questions',fn:vocabGen(QW,'Questions')},house:{label:'Maison',fn:vocabGen(HOUSE,'La maison')},verbs:{label:'Verbs',fn:vocabGen(VERBS,'Verbs')},spell:{label:'-ger / -yer / -cer',fn:vocabGen([...GER,...YER,...CER],'Verbs')},mix:{label:'Mix',fn:()=>null}});
+D.conj=drill('conj',{irr:{label:'être · avoir · aller',fn:()=>conjItem(pick(['être','avoir','aller']))},prendre:{label:'prendre family',fn:()=>conjItem(pick(['prendre','comprendre','apprendre','surprendre']))},er:{label:'Regular -er',fn:()=>conjItem(pick(['jouer','danser','chanter','parler','écouter','étudier','cuisiner','travailler','regarder','aimer','habiter','voyager']))},spell:{label:'-ger · -cer · -yer · acheter',fn:()=>conjItem(pick([...GER,...CER,...YER].map(v=>v[0]).concat(['manger','nager','acheter','acheter','payer','envoyer','commencer'])),false,true)},mix:{label:'Mix',fn:()=>null}});
+D.adj=drill('adj',{form:{label:'Agreement',fn:adjForm},build:{label:'Build the phrase',fn:adjBuild},colors:{label:'Colors',fn:adjColor},table:{label:'All 4 forms',fn:adjTable},mix:{label:'Mix',fn:()=>null}});
+D.prep=drill('prep',{mean:{label:'From English',fn:prepMean},combine:{label:'Combine (près de + le)',fn:prepCombine},a:{label:'à + article',fn:prepA},de:{label:'de + article',fn:prepDe},mix:{label:'Mix',fn:()=>null}});
+
+/* ================= rules ================= */
+const tbl=(head,rows)=>`<div class="tw"><table><tr>${head.map(h=>`<th>${h}</th>`).join('')}</tr>${rows.map(r=>`<tr>${r.map(c=>`<td>${c}</td>`).join('')}</tr>`).join('')}</table></div>`;
+$('#rules').innerHTML=`
+<div class="card fix"><b>Fixed from your notes</b><ul>
+<li><b>une commode</b> = dresser (un bureau = desk).</li>
+<li><b>nager</b> = to swim (not snow).</li>
+<li>avoir: <b>vous avez</b> (vous allez is aller).</li>
+<li><b>un vieil homme</b> (vieil before a masc. vowel noun) and <b>de vieilles femmes folles</b>.</li>
+<li><b>marron</b> and <b>orange</b> never change: des chiens marron, des voitures orange.</li>
+<li>des gommes <b>violettes</b> (plural needs -s).</li>
+<li><b>sympa</b> adds -s in the plural: des amis sympas.</li>
+<li>Feminine plurals need -es: gourmand<b>es</b>, généreu<b>ses</b>. Masculine plural of sportif is sporti<b>fs</b>, actif is acti<b>fs</b>.</li>
+<li><b>châtain</b> traditionally doesn’t change for feminine (châtaine is also accepted). Plural: châtains.</li>
+<li>le jardin = garden / yard · un traversin = bolster (long pillow) · les toilettes = toilet / restroom.</li>
+</ul></div>
+<div class="card"><h2>Prépositions de lieu</h2>${tbl(['French','English'],PREP.map(p=>[`${p[0]}${p[2]?'':' <span class="kbd">no de</span>'}`,p[1]]))}
+<p><b>de</b> combines with the article after it: près <b>du</b> bureau, à côté <b>de la</b> porte, en face <b>des</b> fenêtres, près <b>de l’</b>armoire. No de: sous le poster, dans ma chambre.</p>
+${tbl(['','le','la','l’','les'],[['à','<b>au</b>','à la','à l’','<b>aux</b>'],['de','<b>du</b>','de la','de l’','<b>des</b>']])}</div>
+<div class="card"><h2>Adjective agreement</h2>
+${tbl(['','masc.','fem.'],[['singular','—','+e'],['plural','+s (or +x)','+es']])}
+<p>If it already ends in that letter, don’t add another one: rouge → rouge, gris → gris (m. pl.).</p>
+<div class="grid2"><span>-eux → -euse (heureuse)</span><span>-f → -ve (sportive, active)</span><span>-er → -ère (fière, chère, légère, première, dernière, entière, amère)</span><span>-on → -onne (mignonne, bonne)</span><span>-et → -ette (violette)</span><span>-il → -ille (gentille)</span><span>-os → -osse (grosse)</span><span>roux → rousse</span><span>blanc → blanche</span><span>long → longue</span><span>fou → folle</span><span>beau → belle, nouveau → nouvelle, vieux → vieille</span></div>
+<p><b>Invariable:</b> orange, marron, chic, cool, super. (sympa only adds -s.)</p></div>
+<div class="card"><h2>BANGS: these go before the noun</h2>
+${tbl(['','Adjectives'],[['<b>B</b>eauty','joli, beau (bel), vilain'],['<b>A</b>ge','jeune, vieux (vieil)'],['<b>N</b>ewness','nouveau (nouvel)'],['<b>G</b>oodness','bon, mauvais, gentil'],['<b>S</b>ize','grand, petit, haut, court, long, gros']])}
+<p><b>bel / nouvel / vieil</b> are for a masculine singular noun starting with a vowel or silent h: un bel homme, un nouvel ami, un vieil hôtel. Plural stays beaux / nouveaux / vieux.</p>
+<p><b>des → de</b> when a plural adjective comes before the noun: de mauvais films, de vieilles femmes.</p>
+<p>Everything else goes after: une jeune femme blonde, un nouveau livre intéressant, un homme mince et laid, une personne amusante et intelligente.</p></div>
+<div class="card"><h2>Verbs</h2>
+${tbl(['','être','avoir','aller','prendre'],[0,1,2,3,4,5].map(i=>[['je','tu','il/elle/on','nous','vous','ils/elles'][i],IRR['être'][i],(i===0?'j’':'')+IRR['avoir'][i],IRR['aller'][i],IRR['prendre'][i]]))}
+<p><b>prendre</b> = to take / to have (food or drink). Same pattern: comprendre (understand), apprendre (learn), surprendre (surprise).</p>
+<p><b>Regular -er:</b> drop -er, add -e, -es, -e, -ons, -ez, -ent (je joue, nous jouons, ils jouent).</p>
+<p><b>-ger:</b> nous keeps the e: nous mangeons. <b>-cer:</b> nous uses ç: nous commençons. <b>-yer:</b> y → i in the boot (je, tu, il, ils): j’envoie, nous envoyons, ils envoient. <b>acheter:</b> j’achète, nous achetons.</p>
+<p><b>Subject pronouns:</b> je, tu, il / elle / on (iel, informal) · nous, vous, ils / elles.</p></div>
+<div class="card"><h2>Avoir expressions</h2>${tbl(['French','English'],AVOIR.map(a=>[a[0],a[1]]))}</div>
+<div class="card"><h2>Questions</h2>${tbl(['French','English'],[['est-ce que','turns a sentence into a yes/no question'],...QW.map(q=>[q[0],q[1]])])}
+<p><b>Oui</b> = yes to a normal question. <b>Non</b> = no. <b>Si</b> = yes to a negative question (Tu n’as pas faim ? — Si !). Si also means <b>if</b> and <b>so</b>.</p></div>
+<div class="card"><h2>La maison</h2>${tbl(['French','English'],HOUSE.map(h=>[h[0],h[1]]))}</div>
+<div class="card"><h2>French house &amp; lifestyle culture</h2>
+<p>French houses, yards, cars, and streets are generally <b>smaller</b> than American ones.</p>
+<p>French people are more <b>private</b>: yards are closed in by walls, hedges, or fences; doors inside are kept closed; at night the <b>shutters (les volets)</b> and curtains are closed, so houses look dark from the street.</p>
+<p>Electricity and landline calls are expensive: people <b>turn off lights</b> when they leave a room, and phone calls are short. <b>La minuterie</b> is a timed light in hallways and stairwells that turns itself off after a minute or two.</p>
+<p>Les toilettes (W.-C.) are often a small room separate from la salle de bains.</p></div>`;
+
+/* ================= tabs ================= */
+const TABS=['mc','vocab','conj','adj','prep','rules'];
+function showTab(t){ TABS.forEach(x=>{ $('#pane-'+x).hidden=x!==t; $('#tab-'+x).setAttribute('aria-selected',x===t); }); store.set('tab',t); ACTIVE=D[t]||null;
+  const f=document.querySelector('#pane-'+t+' input[type=text]:not([readonly])'); if(f) f.focus(); }
+document.querySelectorAll('nav.tabs button').forEach(b=>b.onclick=()=>showTab(b.dataset.tab));
+document.addEventListener('keydown',e=>{ if(ACTIVE) ACTIVE.onKey(e); });
+Object.values(D).forEach(d=>d.next());
+const t0=store.get('tab','mc'); showTab(TABS.includes(t0)?t0:'mc');
+</script>
+</body></html>
